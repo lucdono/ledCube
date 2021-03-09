@@ -157,7 +157,6 @@ void effect_mode_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
  -----------------------------------------------------------------------------*/
 
 static void vTaskEffects(void *pvParameters) {
-	const TickType_t xDelay = 1 / portTICK_PERIOD_MS;
 	uint8_t i = 0;
 
 	while (true) {
@@ -167,15 +166,14 @@ static void vTaskEffects(void *pvParameters) {
 			i++;
 
 		GPIO_PortToggle(GPIO, BOARD_PORT, 1u << BOARD_LED_GREEN_PIN);
-		vTaskDelay(xDelay);
+		vTaskDelay(1);
 	}
 }
 
 static void vTaskRefresh(void *pvParameters) {
-	const TickType_t xDelay = 3 / portTICK_PERIOD_MS;
 	while (true) {
 		ledQB_refresh();
-		vTaskDelay(xDelay);
+		vTaskDelay(1);
 	}
 }
 

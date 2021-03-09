@@ -23,10 +23,10 @@
  * Internal Variables
  ******************************************************************************/
 static effect_t effects[] = {
-	{ "write",   true,  1000, 100,  1,  true, f_write_init,         f_write },
-	{ "ripple",  true, 10000,  20, 15,  true, NULL,                 f_ripple },
+	{ "write",   true,  1000,  60,  1,  true, f_write_init,         f_write },
+	{ "ripple",  true, 10000,  50, 15,  true, NULL,                 f_ripple },
 	{ "wave",    true, 10000,  25, 15,  true, NULL,                 f_wave },
-    { "sphere",  true, 10000,  25, 10,  true, f_spheres_init,       f_spheres },
+    { "sphere",  true, 10000,  20, 10,  true, f_spheres_init,       f_spheres },
 	{ "cubes",   true, 10000,  50,  1,  true, f_cubes_init,         f_cubes },
 	{ "rain",    true, 10000,  80,  1, false, NULL,                 f_rain },
 	{ "spiral",  true, 10000,  25, 15,  true, NULL,                 f_spiral },

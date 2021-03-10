@@ -61,7 +61,7 @@
 #define MODE_ALL		 		 0U
 #define MODE_FIXED		 		 1U
 #define MODE_VOLUME		 		 2U
-#define MODE_FFT		 		 3U
+#define MODE_ALL_ON		 		 3U
 
 #define MODES			 		 4U
 
@@ -237,12 +237,12 @@ static void effect_mode_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
 	}
 		break;
 	case MODE_VOLUME: {
-		ledQB_set_runMode("volume");
+		ledQB_set_runMode("Volume");
 		GPIO_PortSet(GPIO, BOARD_PORT, 1u << BOARD_LED_GREEN_PIN);
 	}
 		break;
-	case MODE_FFT: {
-		ledQB_set_runMode("fft");
+	case MODE_ALL_ON: {
+		ledQB_set_runMode("Full");
 		GPIO_PortClear(GPIO, BOARD_PORT, 1u << BOARD_LED_GREEN_PIN);
 	}
 		break;

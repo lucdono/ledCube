@@ -1,9 +1,9 @@
-#ifndef ADC_H_
-#define ADC_H_
+#ifndef FULL_H_
+#define FULL_H_
 
 /******************************************************************************
- * Includes
+ * Prototypes
  ******************************************************************************/
-void f_adc(uint16_t frame);
+void f_full(uint16_t frame);
 
-#endif /* ADC_H_ */
+#endif /* FULL_H_ */

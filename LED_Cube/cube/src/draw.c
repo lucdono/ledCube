@@ -131,7 +131,11 @@ void ledQB_plane(uint8_t plane, uint8_t axis) {
 }
 
 void ledQB_clear(void) {
-	memset(frame_buffer, 0, LEDQB_SIZE * LEDQB_SIZE);
+	memset(frame_buffer, 0, LEDQB_SIZE * LEDQB_SIZE * sizeof(uint8_t));
+}
+
+void ledQB_full(void) {
+	memset(frame_buffer, 0xFF, LEDQB_SIZE * LEDQB_SIZE * sizeof(uint8_t));
 }
 
 color_t ledQB_getPoint(uint8_t x, uint8_t y, uint8_t z) {

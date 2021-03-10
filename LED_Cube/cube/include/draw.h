@@ -41,6 +41,7 @@ typedef enum plane {
  * Prototypes
  ******************************************************************************/
 void ledQB_clear(void);
+void ledQB_full(void);
 void ledQB_point(point_t p);
 void ledQB_line(line_t r);
 void ledQB_shiftXLayer(uint8_t dir);

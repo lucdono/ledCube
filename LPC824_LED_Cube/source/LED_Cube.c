@@ -59,8 +59,9 @@
 #define MODE_ALL		 		 0U
 #define MODE_FIXED		 		 1U
 #define MODE_VOLUME		 		 2U
+#define MODE_FFT		 		 3U
 
-#define MODES			 		 3U
+#define MODES			 		 4U
 
 /******************************************************************************
  * Internal Variables
@@ -218,21 +219,29 @@ static void effect_switch_callback(pint_pin_int_t pintr, uint32_t pmatch_status)
 static void effect_mode_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
 	mode = (mode + 1) % MODES;
 
+	/* Turn off LEDs */
+	GPIO_PortSet(GPIO, BOARD_PORT, 1u << BOARD_LED_BLUE_PIN | 1u << BOARD_LED_GREEN_PIN);
+
 	switch (mode) {
 	case MODE_ALL: {
 		ledQB_set_runMode("");
-		GPIO_PortClear(GPIO, BOARD_PORT, 1u << BOARD_LED_BLUE_PIN);
+		GPIO_PortSet(GPIO, BOARD_PORT, 1u << BOARD_LED_BLUE_PIN);
 	}
 		break;
 	case MODE_FIXED: {
 		char *effect = ledQB_get_currentEffect();
 		ledQB_set_runMode(effect);
-		GPIO_PortSet(GPIO, BOARD_PORT, 1u << BOARD_LED_BLUE_PIN);
+		GPIO_PortClear(GPIO, BOARD_PORT, 1u << BOARD_LED_BLUE_PIN);
 	}
 		break;
 	case MODE_VOLUME: {
 		ledQB_set_runMode("volume");
-		GPIO_PortToggle(GPIO, BOARD_PORT, 1u << BOARD_LED_GREEN_PIN);
+		GPIO_PortSet(GPIO, BOARD_PORT, 1u << BOARD_LED_GREEN_PIN);
+	}
+		break;
+	case MODE_FFT: {
+		ledQB_set_runMode("fft");
+		GPIO_PortClear(GPIO, BOARD_PORT, 1u << BOARD_LED_GREEN_PIN);
 	}
 		break;
 	}
@@ -293,6 +302,8 @@ int main(void) {
 	BOARD_InitBootClocks();
 
 	ledQB_init();
+
+	GPIO_PortSet(GPIO, BOARD_PORT, 1u << BOARD_LED_GREEN_PIN);
 	if (strlen(ledQB_get_runMode()) == 0)
 		GPIO_PortSet(GPIO, BOARD_PORT, 1u << BOARD_LED_BLUE_PIN);
 	else

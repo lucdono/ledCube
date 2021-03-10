@@ -69,6 +69,10 @@ void f_volume_init(void) {
 	algorithm = AUDIO_VOLUME;
 }
 
+void f_fft_init(void) {
+	algorithm = AUDIO_FFT;
+}
+
 void f_adc(uint16_t frame) {
 	uint8_t y = 0;
 	uint8_t z = 0;
@@ -84,15 +88,15 @@ void f_adc(uint16_t frame) {
 				height[y] = get_amplitude();
 			break;
 		}
-	}
 
-	ledQB_shiftXLayer(true);
-	ledQB_clrXLayer(LEDQB_SIZE - 1);
+		ledQB_shiftXLayer(true);
+		ledQB_clrXLayer(LEDQB_SIZE - 1);
 
-	for (y = 0; y < LEDQB_SIZE; y++) {
-		for (z = 0; z < height[y]; z++) {
-			point_t point = { LEDQB_SIZE - 1, y, z, 1 };
-			ledQB_point(point);
+		for (y = 0; y < LEDQB_SIZE; y++) {
+			for (z = 0; z < height[y]; z++) {
+				point_t point = { LEDQB_SIZE - 1, y, z, 1 };
+				ledQB_point(point);
+			}
 		}
 	}
 

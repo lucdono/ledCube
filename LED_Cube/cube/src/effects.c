@@ -37,6 +37,7 @@ static effect_t effects[] = {
 	{ "life",    true, 10000, 200,  1, false, f_life_init,          f_life },
 	{ "pyramid", true, 10000,  25,  1, false, f_pyramid_init,       f_pyramid },
 	{ "volume",  true,  1000,   5,  1, false, f_volume_init,        f_adc },
+	{ "fft",     true,  1000,   5,  1, false, f_fft_init,           f_adc },
 	{ "",        false,    0,   0,  0, false, NULL,                 NULL }
 };
 

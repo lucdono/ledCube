@@ -17,8 +17,6 @@
 
 #define CUBEMATH_SIN	10000
 
-#define round(x) ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
-
 #define map(in, inMin, inMax, outMin, outMax) (((float)(in - inMin)) / ((float)(inMax - inMin)) * ((float)(outMax - outMin)) + (float)outMin)
 
 extern int16_t sin_table[A_360];

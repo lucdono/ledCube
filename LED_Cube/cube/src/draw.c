@@ -10,6 +10,11 @@
 #include "draw.h"
 
 /******************************************************************************
+ * Defines
+ ******************************************************************************/
+#define LINE_FACTOR		8
+
+/******************************************************************************
  * Functions
  ******************************************************************************/
 void ledQB_point(point_t p) {
@@ -22,7 +27,7 @@ void ledQB_point(point_t p) {
 	}
 }
 
-uint8_t *ledQB_getZLayer(uint8_t index) {
+uint8_t* ledQB_getZLayer(uint8_t index) {
 	return frame_buffer[index];
 }
 
@@ -38,7 +43,7 @@ void ledQB_shiftXLayer(uint8_t dir) {
 		for (x = 0; x < LEDQB_SIZE - 1; x++) {
 			for (z = 0; z < LEDQB_SIZE; z++) {
 				frame_buffer[z][x] = frame_buffer[z][x + 1];
-				if(x == LEDQB_SIZE-1)
+				if (x == LEDQB_SIZE - 1)
 					frame_buffer[z][LEDQB_SIZE - 1] = 0;
 			}
 		}
@@ -46,7 +51,7 @@ void ledQB_shiftXLayer(uint8_t dir) {
 		for (x = 1; x < LEDQB_SIZE; x++) {
 			for (z = 0; z < LEDQB_SIZE; z++) {
 				frame_buffer[z][x - 1] = frame_buffer[z][x];
-				if(x == 1)
+				if (x == 1)
 					frame_buffer[z][0] = 0;
 			}
 		}
@@ -76,25 +81,21 @@ void ledQB_clrLayer(uint8_t index) {
 }
 
 void ledQB_line(line_t l) {
-	float t = 0;
+	uint8_t t = 0;
 	int8_t dir_vector[3] = { l.end.x - l.start.x, l.end.y - l.start.y, l.end.z
 			- l.start.z };
 	point_t p;
 
-	for (t = 0; t <= 1; t += 0.1) {
-		uint8_t x = round(
-				map((l.start.x + dir_vector[0] * t), 0, LEDQB_SIZE - 1, 0,
-						LEDQB_SIZE - 1));
-		uint8_t y = round(
-				map((l.start.y + dir_vector[1] * t), 0, LEDQB_SIZE - 1, 0,
-						LEDQB_SIZE - 1));
-		uint8_t z = round(
-				map((l.start.z + dir_vector[2] * t), 0, LEDQB_SIZE - 1, 0,
-						LEDQB_SIZE - 1));
-		p.x = x;
-		p.y = y;
-		p.z = z;
-		p.color = l.color;
+	p.color = l.color;
+
+	for (t = 0; t <= LINE_FACTOR; t++) {
+		p.x = map((LINE_FACTOR * l.start.x + dir_vector[0] * t), 0,
+				LINE_FACTOR*(LEDQB_SIZE), 0, LEDQB_SIZE - 1);
+		p.y = map((LINE_FACTOR * l.start.y + dir_vector[1] * t), 0,
+				LINE_FACTOR*(LEDQB_SIZE), 0, LEDQB_SIZE - 1);
+		p.z = map((LINE_FACTOR * l.start.z + dir_vector[2] * t), 0,
+				LINE_FACTOR*(LEDQB_SIZE), 0, LEDQB_SIZE - 1);
+
 		ledQB_point(p);
 	}
 }
@@ -165,7 +166,7 @@ void ledQB_char(plane_t plane, uint8_t axis, char c, uint8_t f, uint8_t offset) 
 	uint8_t y = 0;
 	uint8_t z = 0;
 
-	c = c - ' ';// First printable char
+	c = c - ' '; // First printable char
 	switch (plane) {
 	case XY:
 		for (y = 0; y < LEDQB_SIZE; y++)
@@ -180,8 +181,8 @@ void ledQB_char(plane_t plane, uint8_t axis, char c, uint8_t f, uint8_t offset) 
 		for (z = 0; z < LEDQB_SIZE; z++)
 			for (x = 0; x < LEDQB_SIZE; x++) {
 				if ((fonts[c % ASCII_FONTS][z]) & (BIT_(x))) {
-					point_t point = { flip(f, x + offset), axis, (LEDQB_SIZE
-							- 1) - z, 1 };
+					point_t point = { flip(f, x + offset), axis,
+							(LEDQB_SIZE - 1) - z, 1 };
 					ledQB_point(point);
 				}
 			}
@@ -190,8 +191,8 @@ void ledQB_char(plane_t plane, uint8_t axis, char c, uint8_t f, uint8_t offset) 
 		for (y = 0; y < LEDQB_SIZE; y++) {
 			for (z = 0; z < LEDQB_SIZE; z++)
 				if ((fonts[c % ASCII_FONTS][z]) & (BIT_(y))) {
-					point_t point = { axis, flip(f, y + offset), (LEDQB_SIZE
-							- 1) - z, 1 };
+					point_t point = { axis, flip(f, y + offset),
+							(LEDQB_SIZE - 1) - z, 1 };
 					ledQB_point(point);
 				}
 		}

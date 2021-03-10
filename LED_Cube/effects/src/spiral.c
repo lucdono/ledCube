@@ -16,13 +16,14 @@ void f_spiral(uint16_t frame) {
 	for (z = 0; z < LEDQB_SIZE; z++) {
 		int16_t theta = map(z, 0, LEDQB_SIZE - 1, (-A_180 + frame),
 				(A_180 + frame));
-		int16_t X = map(sin_table[theta % A_360], -CUBEMATH_SIN, CUBEMATH_SIN, 0,
-				LEDQB_SIZE);
-		int16_t Y = map(sin_table[((uint16_t) round(theta + A_90)) % A_360],
-				-CUBEMATH_SIN, CUBEMATH_SIN, 0, LEDQB_SIZE);
+		int16_t X = map(sin_table[(theta+A_180) % A_360], -CUBEMATH_SIN,
+				CUBEMATH_SIN, 0, LEDQB_SIZE);
+		int16_t Y = map(sin_table[(theta + A_90 + A_180) % A_360], -CUBEMATH_SIN,
+				CUBEMATH_SIN, 0, LEDQB_SIZE);
+
 		for (x = 0; x < LEDQB_SIZE; x++) {
 			for (y = 0; y < LEDQB_SIZE; y++) {
-				if (((x == X) || (x == X - 1)) && (y == Y)) {
+				if (((x == X) || (x == X - 1) || (x == X - 2)) && (y == Y)) {
 					point_t point = { x, y, z, 1 };
 					ledQB_point(point);
 				}

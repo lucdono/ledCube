@@ -24,21 +24,22 @@
  * Internal Variables
  ******************************************************************************/
 static effect_t effects[] = {
-	{ "write",   true,  1000,  60,  1,  true, f_write_init,         f_write },
-	{ "ripple",  true, 10000,  50, 15,  true, NULL,                 f_ripple },
-	{ "wave",    true, 10000,  25, 15,  true, NULL,                 f_wave },
-    { "sphere",  true, 10000,  20, 10,  true, f_spheres_init,       f_spheres },
-	{ "cubes",   true, 10000,  50,  1,  true, f_cubes_init,         f_cubes },
-	{ "rain",    true, 10000,  80,  1, false, NULL,                 f_rain },
-	{ "spiral",  true, 10000,  25, 15,  true, NULL,                 f_spiral },
-	{ "spin",    true, 10000,  30, 20,  true, f_spin_init,          f_spin },
-	{ "boing",   true, 10000,  50,  1,  true, NULL,                 f_plane_boing },
-	{ "suspend", true, 10000, 100,  1, false, f_plane_suspend_init, f_plane_suspend },
-	{ "life",    true, 10000, 200,  1, false, f_life_init,          f_life },
-	{ "pyramid", true, 10000,  25,  1, false, f_pyramid_init,       f_pyramid },
-	{ "volume",  true,  1000,   5,  1, false, f_volume_init,        f_adc },
-	{ "fft",     true,  1000,   5,  1, false, f_fft_init,           f_adc },
-	{ "",        false,    0,   0,  0, false, NULL,                 NULL }
+	// NAME      ENABLE   ELAPSE  WAIT  RATE  CLEAR   INIT                  RUN
+	{ "write",   true,    1000,   60,   1,    true,   f_write_init,         f_write },
+	{ "ripple",  true,    10000,  20,   10,   true,   NULL,                 f_ripple },
+	{ "wave",    true,    10000,  25,   20,   true,   NULL,                 f_wave },
+	{ "sphere",  true,    10000,  50,   -1,   true,   f_spheres_init,       f_spheres },
+	{ "cubes",   true,    10000,  40,   1,    true,   f_cubes_init,         f_cubes },
+	{ "rain",    true,    10000,  60,   1,    false,  NULL,                 f_rain },
+	{ "spiral",  true,    10000,  25,   15,   true,   NULL,                 f_spiral },
+	{ "spin",    true,    10000,  10,   10,   true,   NULL,                 f_spin },
+	{ "boing",   true,    10000,  50,   1,    true,   NULL,                 f_plane_boing },
+	{ "suspend", true,    10000,  100,  1,    false,  f_plane_suspend_init, f_plane_suspend },
+	{ "life",    true,    10000,  200,  1,    false,  f_life_init,          f_life },
+	{ "pyramid", true,    10000,  25,   1,    false,  f_pyramid_init,       f_pyramid },
+	{ "volume",  true,    1000,   5,    1,    false,  f_volume_init,        f_adc },
+//	{ "fft",     true,  1000,   5,  1, false, f_fft_init,           f_adc },
+	{ "",        false,   0,      0,    0,    false,   NULL,                NULL }
 };
 
 static effect_t *currentEffect;

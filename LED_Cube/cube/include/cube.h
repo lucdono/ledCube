@@ -20,7 +20,7 @@
 /**
  * @brief   Full library name string.
  */
-#define LEDQB_FULL_NAME      "8x8x8 3D-LED Cube v1.0"
+#define LEDQB_FULL_NAME      "3D LED Cube v1.0"
 
 /******************************************************************************
  * External Variables

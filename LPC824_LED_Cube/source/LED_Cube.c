@@ -35,6 +35,8 @@
  *   - DEC_BIT2 [C]     -->  PIN0_27
  *   - DEC_EN   [D]     -->  PIN0_28
  *
+ * ADC CH0 -> Mic:
+ *   - ADC0      		-->  PIN0_07
  */
 #define PLANE_SPI_SCK			14U
 #define PLANE_SPI_MOSI			12U
@@ -139,10 +141,10 @@ void ledQB_osal_init(void) {
 	xTaskCreate(vTaskEffects, "vTaskEffects", configMINIMAL_STACK_SIZE, NULL,
 			(tskIDLE_PRIORITY + 1UL), (TaskHandle_t *) NULL);
 
-	xTaskCreate(vTaskRefresh, "vTaskRefresh", configMINIMAL_STACK_SIZE, NULL,
+	xTaskCreate(vTaskRefresh, "vTaskRefresh", 64, NULL,
 			(tskIDLE_PRIORITY + 1UL), (TaskHandle_t *) NULL);
 
-	xTaskCreate(vTaskADC, "vTaskADC", configMINIMAL_STACK_SIZE,
+	xTaskCreate(vTaskADC, "vTaskADC", 32,
 			NULL, (tskIDLE_PRIORITY + 1UL), (TaskHandle_t *) NULL);
 }
 
@@ -255,7 +257,8 @@ void ADC0_SEQA_IRQHandler(void) {
 		ADC_GetChannelConversionResult(ADC0, ADC_SAMPLE_CHANNEL,
 				gAdcResultInfoPtr);
 		ADC_ClearStatusFlags(ADC0, kADC_ConvSeqAInterruptFlag);
-		adc_samples[sample++ % ADC_BUFFER_DEPTH] = gAdcResultInfoStruct.result & 0xFFFF;
+		adc_samples[sample++ % ADC_BUFFER_DEPTH] = gAdcResultInfoStruct.result
+				& 0xFFFF;
 	}
 }
 

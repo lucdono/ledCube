@@ -21,13 +21,13 @@ void f_ripple(uint16_t frame) {
 	uint8_t z = 0;
 
 	for (y = 0; y < LEDQB_SIZE; y++) {
+		mapY = map(y, 0, LEDQB_SIZE - 1, -A_180, A_180);
 		for (x = 0; x < LEDQB_SIZE; x++) {
 			mapX = map(x, 0, LEDQB_SIZE - 1, -A_180, A_180);
-			mapY = map(y, 0, LEDQB_SIZE - 1, -A_180, A_180);
 			dist = ledQB_sqrt(mapX * mapX + mapY * mapY);
 
-			z = (uint16_t) (map(sin_table[(frame + dist)%A_360], -CUBEMATH_SIN,
-					CUBEMATH_SIN, 0, LEDQB_SIZE));
+			z = map(sin_table[(frame + dist)%A_360], -CUBEMATH_SIN,
+					CUBEMATH_SIN, 0, LEDQB_SIZE);
 			point_t point = { x, y, z, 1 };
 			ledQB_point(point);
 		}

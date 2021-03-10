@@ -18,6 +18,7 @@
 #include "life.h"
 #include "pyramid.h"
 #include "write.h"
+#include "adc.h"
 
 /******************************************************************************
  * Internal Variables
@@ -35,6 +36,7 @@ static effect_t effects[] = {
 	{ "suspend", true, 10000, 100,  1, false, f_plane_suspend_init, f_plane_suspend },
 	{ "life",    true, 10000, 200,  1, false, f_life_init,          f_life },
 	{ "pyramid", true, 10000,  25,  1, false, f_pyramid_init,       f_pyramid },
+	{ "volume",  true,  1000,   5,  1, false, f_volume_init,        f_adc },
 	{ "",        false,    0,   0,  0, false, NULL,                 NULL }
 };
 

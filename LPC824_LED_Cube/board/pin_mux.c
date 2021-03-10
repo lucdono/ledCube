@@ -215,6 +215,8 @@ void BOARD_InitBootPins(void) {
     /* PORT1 PIN (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_6, pio6_config);
 
+    SWM_SetFixedPinSelect(SWM0, kSWM_ADC_CHN0, true);
+
     /* SPI0_SCK connect to P0_14 */
     SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_SCK, kSWM_PortPin_P0_14);
 

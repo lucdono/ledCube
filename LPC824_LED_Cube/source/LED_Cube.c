@@ -4,12 +4,12 @@
 #include "clock_config.h"
 #include "board.h"
 #include "pin_mux.h"
-
+#include "fsl_adc.h"
 #include "fsl_spi.h"
 #include "fsl_gpio.h"
 #include "fsl_pint.h"
 #include "fsl_syscon.h"
-
+#include "fsl_power.h"
 #include "LPC824.h"
 
 #include "FreeRTOS.h"
@@ -53,16 +53,36 @@
 #define BOARD_LED_BLUE_PIN		17U
 #define BOARD_LED_GREEN_PIN		16U
 
+#define ADC_SAMPLE_CHANNEL 		 0U
+#define ADC_CLOCK_DIVIDER 		 1U
+
+#define MODE_ALL		 		 0U
+#define MODE_FIXED		 		 1U
+#define MODE_VOLUME		 		 2U
+
+#define MODES			 		 3U
+
 /******************************************************************************
  * Internal Variables
  ******************************************************************************/
 static SemaphoreHandle_t mutex_v;
+static uint16_t sample = 0;
+static adc_result_info_t gAdcResultInfoStruct;
+adc_result_info_t *volatile gAdcResultInfoPtr = &gAdcResultInfoStruct;
+static uint16_t adc_samples[ADC_BUFFER_DEPTH];
+static uint8_t mode = 0;
 
 /******************************************************************************
  * Prototypes
  ******************************************************************************/
 static void vTaskEffects(void *pvParameters);
 static void vTaskRefresh(void *pvParameters);
+static void vTaskADC(void *pvParameters);
+static void ADC_Configuration(void);
+static void SPI_Configuration(void);
+static void GPIO_Configuration(void);
+static void effect_switch_callback(pint_pin_int_t pintr, uint32_t pmatch_status);
+static void effect_mode_callback(pint_pin_int_t pintr, uint32_t pmatch_status);
 
 /******************************************************************************
  * Functions
@@ -73,24 +93,14 @@ static void vTaskRefresh(void *pvParameters);
  -----------------------------------------------------------------------------*/
 
 void ledQB_board_init(void) {
-	spi_master_config_t userConfig = { 0 };
-	uint32_t srcFreq = 0U;
-
-	SPI_MasterGetDefaultConfig(&userConfig);
-	userConfig.baudRate_Bps = 500000U;
-	userConfig.sselNumber = kSPI_Ssel0Assert;
-	userConfig.clockPolarity = kSPI_ClockPolarityActiveLow;
-	userConfig.direction = kSPI_MsbFirst;
-	userConfig.clockPhase = kSPI_ClockPhaseSecondEdge;
-	userConfig.dataWidth = kSPI_Data8Bits;
-	userConfig.sselPolarity = kSPI_SpolActiveAllHigh;
-
-	srcFreq = CLOCK_GetFreq(kCLOCK_MainClk);
-	SPI_MasterInit(SPI0, &userConfig, srcFreq);
+	GPIO_Configuration();
+	SPI_Configuration();
+	ADC_Configuration();
 }
 
 void ledQB_board_plane_select(uint8_t plane) {
-	uint32_t mask = ledQB_board_plane_mask(plane, GPIO_PortRead(GPIO, BOARD_PORT),
+	uint32_t mask = ledQB_board_plane_mask(plane,
+			GPIO_PortRead(GPIO, BOARD_PORT),
 			PLANE_DEC_BIT0, PLANE_DEC_BIT1, PLANE_DEC_BIT2, PLANE_DEC_EN);
 
 	GPIO_PortMaskedWrite(GPIO, BOARD_PORT, mask);
@@ -130,25 +140,113 @@ void ledQB_osal_init(void) {
 
 	xTaskCreate(vTaskRefresh, "vTaskRefresh", configMINIMAL_STACK_SIZE, NULL,
 			(tskIDLE_PRIORITY + 1UL), (TaskHandle_t *) NULL);
+
+	xTaskCreate(vTaskADC, "vTaskADC", configMINIMAL_STACK_SIZE,
+			NULL, (tskIDLE_PRIORITY + 1UL), (TaskHandle_t *) NULL);
+}
+
+static void GPIO_Configuration(void) {
+	SYSCON_AttachSignal(SYSCON, kPINT_PinInt0, kSYSCON_GpioPort0Pin1ToPintsel);
+	PINT_PinInterruptConfig(PINT, kPINT_PinInt0, kPINT_PinIntEnableRiseEdge,
+			effect_switch_callback);
+	PINT_EnableCallbackByIndex(PINT, kPINT_PinInt0);
+
+	SYSCON_AttachSignal(SYSCON, kPINT_PinInt1, kSYSCON_GpioPort0Pin6ToPintsel);
+	PINT_PinInterruptConfig(PINT, kPINT_PinInt1, kPINT_PinIntEnableRiseEdge,
+			effect_mode_callback);
+	PINT_EnableCallbackByIndex(PINT, kPINT_PinInt1);
+}
+
+static void SPI_Configuration(void) {
+	spi_master_config_t userConfig = { 0 };
+	uint32_t srcFreq = 0U;
+
+	SPI_MasterGetDefaultConfig(&userConfig);
+	userConfig.baudRate_Bps = 500000U;
+	userConfig.sselNumber = kSPI_Ssel0Assert;
+	userConfig.clockPolarity = kSPI_ClockPolarityActiveLow;
+	userConfig.direction = kSPI_MsbFirst;
+	userConfig.clockPhase = kSPI_ClockPhaseSecondEdge;
+	userConfig.dataWidth = kSPI_Data8Bits;
+	userConfig.sselPolarity = kSPI_SpolActiveAllHigh;
+
+	srcFreq = CLOCK_GetFreq(kCLOCK_MainClk);
+	SPI_MasterInit(SPI0, &userConfig, srcFreq);
+}
+
+static void ADC_Configuration(void) {
+
+	POWER_DisablePD(kPDRUNCFG_PD_ADC0);
+
+	uint32_t frequency = CLOCK_GetFreq(kCLOCK_Irc);
+	ADC_DoSelfCalibration(ADC0, frequency);
+
+	adc_config_t adcConfigStruct;
+	adc_conv_seq_config_t adcConvSeqConfigStruct;
+
+	adcConfigStruct.clockDividerNumber = ADC_CLOCK_DIVIDER;
+	adcConfigStruct.enableLowPowerMode = false;
+	ADC_Init(ADC0, &adcConfigStruct);
+
+	adcConvSeqConfigStruct.channelMask = (1U << ADC_SAMPLE_CHANNEL); /* Includes channel DEMO_ADC_SAMPLE_CHANNEL_NUMBER. */
+	adcConvSeqConfigStruct.triggerMask = 0U;
+	adcConvSeqConfigStruct.triggerPolarity = kADC_TriggerPolarityPositiveEdge;
+	adcConvSeqConfigStruct.enableSingleStep = false;
+	adcConvSeqConfigStruct.enableSyncBypass = false;
+	adcConvSeqConfigStruct.interruptMode = kADC_InterruptForEachSequence;
+	ADC_SetConvSeqAConfig(ADC0, &adcConvSeqConfigStruct);
+	ADC_EnableConvSeqA(ADC0, true); /* Enable the conversion sequence A. */
+
+	ADC_DoSoftwareTriggerConvSeqA(ADC0);
+	while (!ADC_GetChannelConversionResult(ADC0, ADC_SAMPLE_CHANNEL,
+			&gAdcResultInfoStruct)) {
+	}
+	ADC_GetConvSeqAGlobalConversionResult(ADC0, &gAdcResultInfoStruct);
+
+	ADC_EnableInterrupts(ADC0, kADC_ConvSeqAInterruptEnable);
+	NVIC_EnableIRQ(ADC0_SEQA_IRQn);
 }
 
 /*------------------------------------------------------------------------------
- Switches Callback
+ Handlers
  -----------------------------------------------------------------------------*/
 
-void effect_switch_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
+static void effect_switch_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
 	ledQB_quit_effect();
 }
 
-void effect_mode_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
-	char *effect = ledQB_get_currentEffect();
-	char *currentMode = ledQB_get_runMode();
-	if (effect != NULL && strlen(currentMode) == 0) {
-		ledQB_set_runMode(effect);
-		GPIO_PortClear(GPIO, BOARD_PORT, 1u << BOARD_LED_BLUE_PIN);
-	} else {
+static void effect_mode_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
+	mode = (mode + 1) % MODES;
+
+	switch (mode) {
+	case MODE_ALL: {
 		ledQB_set_runMode("");
+		GPIO_PortClear(GPIO, BOARD_PORT, 1u << BOARD_LED_BLUE_PIN);
+	}
+		break;
+	case MODE_FIXED: {
+		char *effect = ledQB_get_currentEffect();
+		ledQB_set_runMode(effect);
 		GPIO_PortSet(GPIO, BOARD_PORT, 1u << BOARD_LED_BLUE_PIN);
+	}
+		break;
+	case MODE_VOLUME: {
+		ledQB_set_runMode("volume");
+		GPIO_PortToggle(GPIO, BOARD_PORT, 1u << BOARD_LED_GREEN_PIN);
+	}
+		break;
+	}
+}
+
+void ADC0_SEQA_IRQHandler(void) {
+	if (kADC_ConvSeqAInterruptFlag
+			== (kADC_ConvSeqAInterruptFlag & ADC_GetStatusFlags(ADC0))) {
+		ADC_EnableConvSeqABurstMode(ADC0, false);
+
+		ADC_GetChannelConversionResult(ADC0, ADC_SAMPLE_CHANNEL,
+				gAdcResultInfoPtr);
+		ADC_ClearStatusFlags(ADC0, kADC_ConvSeqAInterruptFlag);
+		adc_samples[sample++ % ADC_BUFFER_DEPTH] = gAdcResultInfoStruct.result & 0xFFFF;
 	}
 }
 
@@ -165,7 +263,6 @@ static void vTaskEffects(void *pvParameters) {
 		else
 			i++;
 
-		GPIO_PortToggle(GPIO, BOARD_PORT, 1u << BOARD_LED_GREEN_PIN);
 		vTaskDelay(1);
 	}
 }
@@ -177,22 +274,23 @@ static void vTaskRefresh(void *pvParameters) {
 	}
 }
 
+static void vTaskADC(void *pvParameters) {
+	uint16_t n = 0;
+	while (true) {
+		for (n = 0; n < ADC_BUFFER_DEPTH; n++)
+			ADC_EnableConvSeqABurstMode(ADC0, true);
+
+		ledQB_adc_sample(adc_samples);
+		vTaskDelay(1);
+	}
+}
+
 /*------------------------------------------------------------------------------
  Application entry point
  -----------------------------------------------------------------------------*/
 int main(void) {
 	BOARD_InitBootPins();
 	BOARD_InitBootClocks();
-
-	SYSCON_AttachSignal(SYSCON, kPINT_PinInt0, kSYSCON_GpioPort0Pin1ToPintsel);
-	PINT_PinInterruptConfig(PINT, kPINT_PinInt0, kPINT_PinIntEnableRiseEdge,
-			effect_switch_callback);
-	PINT_EnableCallbackByIndex(PINT, kPINT_PinInt0);
-
-	SYSCON_AttachSignal(SYSCON, kPINT_PinInt1, kSYSCON_GpioPort0Pin6ToPintsel);
-	PINT_PinInterruptConfig(PINT, kPINT_PinInt1, kPINT_PinIntEnableRiseEdge,
-			effect_mode_callback);
-	PINT_EnableCallbackByIndex(PINT, kPINT_PinInt1);
 
 	ledQB_init();
 	if (strlen(ledQB_get_runMode()) == 0)

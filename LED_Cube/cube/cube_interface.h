@@ -7,6 +7,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/******************************************************************************
+ * Defines
+ ******************************************************************************/
+#define ADC_BUFFER_DEPTH      	256
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -35,6 +40,8 @@ void ledQB_refresh(void);
 char *ledQB_get_runMode(void);
 char *ledQB_get_currentEffect(void);
 void ledQB_set_runMode(char *mode);
+
+void ledQB_adc_sample(uint16_t *adc_samples);
 
 #ifdef __cplusplus
 }

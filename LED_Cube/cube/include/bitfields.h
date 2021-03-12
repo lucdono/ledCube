@@ -7,7 +7,7 @@
 /*
  * Create value with bit n set.
  */
-#define 	BIT_(n)   ( 1<<(n) )
+#define 	BIT(n)   ( 1LL<<(n) )
 
 /*
  * Shift a by n.
@@ -17,7 +17,7 @@
 /*
  * Create a bitmask len bits long.
  */
-#define 	BIT_MASK(len)   ( BIT_(len)-1 )
+#define 	BIT_MASK(len)   ( BIT(len)-1 )
 
 /*
  * Set the flag bits in word.

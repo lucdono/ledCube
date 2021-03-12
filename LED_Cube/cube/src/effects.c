@@ -50,13 +50,17 @@ static bool quit = false;
 static char run_mode[EFFECT_NAME];
 
 /******************************************************************************
+ * Defines
+ ******************************************************************************/
+#define ledQB_clr_runMode() 	(memset(run_mode, 0, EFFECT_NAME))
+
+/******************************************************************************
  * Prototypes
  ******************************************************************************/
 static void doEffect(effect_t *effect);
 static void ledQB_update_effect(char *name);
 static void ledQB_enable_all(void);
 static void ledQB_update_runMode(void);
-static void ledQB_clr_runMode(void);
 
 /******************************************************************************
  * API
@@ -98,8 +102,7 @@ void ledQB_set_runMode(char *mode) {
 }
 
 char* ledQB_get_runMode(void) {
-	char *mode = run_mode;
-	return mode;
+	return run_mode;
 }
 
 /******************************************************************************
@@ -178,9 +181,4 @@ static void ledQB_update_runMode(void) {
 		ledQB_enable_all();
 	else
 		ledQB_update_effect(mode);
-}
-
-static void ledQB_clr_runMode(void) {
-	memset(run_mode, 0, EFFECT_NAME);
-
 }

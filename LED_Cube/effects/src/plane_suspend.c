@@ -9,93 +9,79 @@
 /******************************************************************************
  * Internal Variables
  ******************************************************************************/
-static int8_t suspend_d = 1;
-static int8_t pass = 0;
+static bool down = true;
+static bool pass = false;
+static int8_t increment = -1;
+static uint8_t layer[LEDQB_SIZE];
+static point_t drops[SUSPEND_DROPS];
 
 /******************************************************************************
  * Functions
  ******************************************************************************/
-void f_plane_suspend_init(void){
-	suspend_d = 1;
-	pass = 0;
+void f_plane_suspend_init(void) {
+	down = true;
+	pass = false;
+	increment = -1;
 }
 
 void f_plane_suspend(uint16_t frame) {
 	uint8_t i = 0;
-	uint8_t layer[LEDQB_SIZE];
-	point_t drops[SUSPEND_DROPS];
+	uint8_t plane = 0;
 
 	frame = frame % LEDQB_SIZE;
 
 	memset(layer, 0, LEDQB_SIZE * sizeof(uint8_t));
+	memset(drops, 0, SUSPEND_DROPS * sizeof(point_t));
 
-	if (pass == 0 && suspend_d == 1 && frame == 0) {
+	if (pass == 0 && down == 1 && frame == 0) {
 		ledQB_plane(XY, LEDQB_SIZE - 1);
 		return;
 	}
 
-	if (suspend_d == 1) {
+	if (pass == 0) {
+		plane = LEDQB_SIZE - frame;
+		increment = -1;
+	} else if (frame <= LEDQB_SIZE - 1) {
+		plane = frame;
+		increment = 1;
+	}
+
+	if (down == 1) {
+		/* Generate random points */
 		for (i = 0; i < SUSPEND_DROPS; i++) {
 			drops[i].x = rand() % LEDQB_SIZE;
 			drops[i].y = rand() % LEDQB_SIZE;
 		}
 
-		if (pass == 0) {
-			memcpy(layer, ledQB_getZLayer(LEDQB_SIZE - frame),
-			LEDQB_SIZE * sizeof(uint8_t));
-			ledQB_clrLayer(LEDQB_SIZE - frame);
-			ledQB_setZLayer(layer, LEDQB_SIZE - frame - 1);
-		} else {
-			if (frame < LEDQB_SIZE - 1) {
-				memcpy(layer, ledQB_getZLayer(frame),
-				LEDQB_SIZE * sizeof(uint8_t));
-				ledQB_clrLayer(frame);
-				ledQB_setZLayer(layer, frame + 1);
-			}
+		/* Move the layer to the following plane */
+		if (frame <= LEDQB_SIZE - 1) {
+			memcpy(layer, ledQB_getZLayer(plane), LEDQB_SIZE * sizeof(uint8_t));
+			ledQB_clrLayer(plane);
+			ledQB_setZLayer(layer, plane + increment);
 		}
 
+		/* Set the generated points */
 		for (i = 0; i < SUSPEND_DROPS; i++) {
-			if (pass == 0) {
-				drops[i].color = 1;
-				drops[i].z = LEDQB_SIZE - frame;
-				ledQB_point(drops[i]);
-				drops[i].color = 0;
-				drops[i].z = LEDQB_SIZE - frame - 1;
-				ledQB_point(drops[i]);
-			} else {
-				if (frame < LEDQB_SIZE - 1) {
-					drops[i].color = 1;
-					drops[i].z = frame;
-					ledQB_point(drops[i]);
-					drops[i].color = 0;
-					drops[i].z = frame + 1;
-					ledQB_point(drops[i]);
-				}
-			}
+			drops[i].color = 1;
+			drops[i].z = plane;
+			ledQB_point(drops[i]);
+			drops[i].color = 0;
+			drops[i].z = plane + increment;
+			ledQB_point(drops[i]);
 		}
-	} else if (frame < LEDQB_SIZE && suspend_d == -1) {
-		if (pass == 0 && frame > 0) {
-			memcpy(layer, ledQB_getZLayer(LEDQB_SIZE - frame),
-			LEDQB_SIZE * sizeof(uint8_t));
-			ledQB_clrLayer(LEDQB_SIZE - frame);
-			ledQB_orLayer(layer, LEDQB_SIZE - frame - 1);
-		} else if (pass == 1 && frame < LEDQB_SIZE - 1) {
-			memcpy(layer, ledQB_getZLayer(frame),
-			LEDQB_SIZE * sizeof(uint8_t));
-			ledQB_clrLayer(frame);
-			ledQB_orLayer(layer, frame + 1);
+	} else {
+		/* Or the layer with the following plane */
+		if (frame <= LEDQB_SIZE - 1) {
+			memcpy(layer, ledQB_getZLayer(plane), LEDQB_SIZE * sizeof(uint8_t));
+			ledQB_clrLayer(plane);
+			ledQB_orLayer(layer, plane + increment);
 		}
 	}
 
-	if (frame == LEDQB_SIZE - 1 && suspend_d == 1)
-		suspend_d = -1;
-	else if (frame == LEDQB_SIZE - 1 && suspend_d == -1) {
-		suspend_d = 1;
-		if (pass == 0)
-			pass = 1;
-		else
-			pass = 0;
-	}
+	if (frame == LEDQB_SIZE - 1 && down == false)
+		pass = !pass;
 
+	if (frame == LEDQB_SIZE - 1)
+		down = !down;
 }
 

@@ -8,26 +8,28 @@
  * Defines
  ******************************************************************************/
 #define EDGES		12
+#define VERTEX		 8
 
 /******************************************************************************
  * Internal Variables
  ******************************************************************************/
 static int8_t dir_c = 1;
+static uint8_t counter = 0;
 static uint8_t size = 0;
 static uint8_t fill = 0;
 static line_t lines[EDGES] = {
-		{{0, 0, 0}, {1, 0, 0}, 1},
-		{{1, 0, 0}, {1, 1, 0}, 1},
-		{{1, 1, 0}, {0, 1, 0}, 1},
-		{{0, 1, 0}, {0, 0, 0}, 1},
-		{{0, 0, 1}, {1, 0, 1}, 1},
-		{{1, 0, 1}, {1, 1, 1}, 1},
-		{{1, 1, 1}, {0, 1, 1}, 1},
-		{{0, 1, 1}, {0, 0, 1}, 1},
-		{{0, 0, 0}, {0, 0, 1}, 1},
-		{{1, 0, 0}, {1, 0, 1}, 1},
-		{{1, 1, 0}, {1, 1, 1}, 1},
-		{{0, 1, 0}, {0, 1, 1}, 1},
+		{ { 0, 0, 0 }, { 1, 0, 0 }, 1 },
+		{ { 1, 0, 0 }, { 1, 1, 0 }, 1 },
+		{ { 1, 1, 0 }, { 0, 1, 0 }, 1 },
+		{ { 0, 1, 0 }, { 0, 0, 0 }, 1 },
+		{ { 0, 0, 1 }, { 1, 0, 1 }, 1 },
+		{ { 1, 0, 1 }, { 1, 1, 1 }, 1 },
+		{ { 1, 1, 1 }, { 0, 1, 1 }, 1 },
+		{ { 0, 1, 1 }, { 0, 0, 1 }, 1 },
+		{ { 0, 0, 0 }, { 0, 0, 1 }, 1 },
+		{ { 1, 0, 0 }, { 1, 0, 1 }, 1 },
+		{ { 1, 1, 0 }, { 1, 1, 1 }, 1 },
+		{ { 0, 1, 0 }, { 0, 1, 1 }, 1 },
 };
 
 /******************************************************************************
@@ -40,7 +42,6 @@ void f_cubes_init(void) {
 }
 
 void f_cubes(uint16_t frame) {
-	(void) frame;
 	line_t line;
 	uint8_t i = 0;
 	uint8_t x = 0;
@@ -51,12 +52,12 @@ void f_cubes(uint16_t frame) {
 
 	if (!fill) {
 		for (i = 0; i < EDGES; i++) {
-			line.start.x = size*lines[i].start.x;
-			line.start.y = size*lines[i].start.y;
-			line.start.z = size*lines[i].start.z;
-			line.end.x = size*lines[i].end.x;
-			line.end.y = size*lines[i].end.y;
-			line.end.z = size*lines[i].end.z;
+			line.start.x = size * lines[i].start.x;
+			line.start.y = size * lines[i].start.y;
+			line.start.z = size * lines[i].start.z;
+			line.end.x = size * lines[i].end.x;
+			line.end.y = size * lines[i].end.y;
+			line.end.z = size * lines[i].end.z;
 			line.color = 1;
 
 			ledQB_line(line);
@@ -65,7 +66,13 @@ void f_cubes(uint16_t frame) {
 		for (x = 0; x <= size; x++) {
 			for (y = 0; y <= size; y++) {
 				for (z = 0; z <= size; z++) {
-					point_t point = { x, y, z, 1 };
+					uint8_t b0 = (0x01 & (counter % VERTEX)) >> 0;
+					uint8_t b1 = (0x02 & (counter % VERTEX)) >> 1;
+					uint8_t b2 = (0x04 & (counter % VERTEX)) >> 2;
+					uint8_t X = b0 * LEDQB_SIZE + (b0==0 ? 1 : -1) * x;
+					uint8_t Y = b1 * LEDQB_SIZE + (b1==0 ? 1 : -1) * y;
+					uint8_t Z = b2 * LEDQB_SIZE + (b2==0 ? 1 : -1) * z;
+					point_t point = { X, Y, Z, 1 };
 					ledQB_point(point);
 				}
 			}
@@ -77,6 +84,7 @@ void f_cubes(uint16_t frame) {
 	else if (size == 0) {
 		fill = !fill;
 		dir_c = 1;
+		counter++;
 	}
 }
 

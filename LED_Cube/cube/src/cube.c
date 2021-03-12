@@ -1,6 +1,9 @@
 /******************************************************************************
  * Includes
  ******************************************************************************/
+#include <time.h>
+#include <stdlib.h>
+
 #include "cube.h"
 #include "cube_interface.h"
 #include "bitfields.h"
@@ -19,7 +22,7 @@ uint8_t frame_buffer[LEDQB_SIZE][LEDQB_SIZE];
 /******************************************************************************
  * Defines
  ******************************************************************************/
-#define	PLANE_MASK(b0,b1,b2,en)  ( ~(BIT_(b0)|BIT_(b1)|BIT_(b2)|BIT_(en)) )
+#define	PLANE_MASK(b0,b1,b2,en)  ( ~(BIT(b0)|BIT(b1)|BIT(b2)|BIT(en)) )
 
 #define	PLANE_VALUE(y,b0,b1,b2)  ( BIT_SHIFT((y & 0x04)>>2, b2) | \
                                    BIT_SHIFT((y & 0x02)>>1, b1) | \
@@ -29,6 +32,8 @@ uint8_t frame_buffer[LEDQB_SIZE][LEDQB_SIZE];
  * API
  ******************************************************************************/
 void ledQB_init(void) {
+	srand(time(NULL));
+
 	ledQB_set_runMode(DEFAULT_RUN_MODE);
 	ledQB_board_init();
 	ledQB_osal_init();

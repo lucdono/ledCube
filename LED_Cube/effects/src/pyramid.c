@@ -23,12 +23,10 @@ void f_pyramid(uint16_t frame) {
 
 	uint8_t x = 0;
 	uint8_t y = 0;
-	uint8_t z = 0;
 
 	for (x = 0; x <= size; x++) {
 		for (y = 0; y <= size; y++) {
-			z = size - (x + y);
-			point_t point = { x, y, z, fill };
+			point_t point = { x, y, size - (x + y), fill };
 			ledQB_point(point);
 		}
 	}

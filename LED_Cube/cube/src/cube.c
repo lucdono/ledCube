@@ -41,8 +41,10 @@ void ledQB_init(void) {
 
 void ledQB_refresh(void) {
 	ledQB_osal_lock();
-	ledQB_board_plane_select(plane);
+	/* Turn FET off to avoid ghost effect */
+	ledQB_board_plane_unselect(plane);
 	ledQB_board_plane_send(frame_buffer[plane], LEDQB_SIZE);
+	ledQB_board_plane_select(plane);
 	plane = (plane + 1) % LEDQB_SIZE;
 	ledQB_osal_unlock();
 }
@@ -56,6 +58,7 @@ uint32_t ledQB_board_plane_mask(uint8_t plane, uint32_t portStatus, uint8_t pin0
 
 __attribute__ ((weak)) void ledQB_board_init(void) {}
 __attribute__ ((weak)) void ledQB_board_plane_select(uint8_t plane) {}
+__attribute__ ((weak)) void ledQB_board_plane_unselect(uint8_t plane) {}
 __attribute__ ((weak)) void ledQB_board_plane_send(uint8_t *data, uint8_t size) {}
 __attribute__ ((weak)) void ledQB_osal_sleep(uint8_t sleep_ms) {}
 __attribute__ ((weak)) uint32_t ledQB_osal_time_now(void) { return 0; }

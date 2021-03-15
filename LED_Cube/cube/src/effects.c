@@ -32,6 +32,7 @@ static effect_t effects[] = {
 	{ "Sphere",  true,    10000,  50,   -1,   true,   f_spheres_init,       f_spheres       },
 	{ "Cubes",   true,    10000,  40,   1,    true,   f_cubes_init,         f_cubes         },
 	{ "Rain",    true,    10000,  60,   1,    false,  NULL,                 f_rain          },
+	{ "Move" ,   true,    10000,  50,   1,    true,   f_cubes_init,         f_cubes_move    },
 	{ "Spiral",  true,    10000,  25,   15,   true,   NULL,                 f_spiral        },
 	{ "Spin",    true,    10000,  10,   10,   true,   NULL,                 f_spin          },
 	{ "Boing",   true,    10000,  50,   1,    true,   NULL,                 f_plane_boing   },

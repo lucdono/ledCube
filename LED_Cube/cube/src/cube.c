@@ -60,7 +60,7 @@ __attribute__ ((weak)) void ledQB_board_init(void) {}
 __attribute__ ((weak)) void ledQB_board_plane_select(uint8_t plane) {}
 __attribute__ ((weak)) void ledQB_board_plane_unselect(uint8_t plane) {}
 __attribute__ ((weak)) void ledQB_board_plane_send(uint8_t *data, uint8_t size) {}
-__attribute__ ((weak)) void ledQB_osal_sleep(uint8_t sleep_ms) {}
+__attribute__ ((weak)) void ledQB_osal_sleep(uint32_t sleep_ms) {}
 __attribute__ ((weak)) uint32_t ledQB_osal_time_now(void) { return 0; }
 __attribute__ ((weak)) void ledQB_osal_lock(void) {}
 __attribute__ ((weak)) void ledQB_osal_unlock(void) {}

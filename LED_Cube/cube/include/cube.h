@@ -17,11 +17,6 @@
 #define _LEDQB_
 #define LEDQB_SIZE    			8
 
-/**
- * @brief   Full library name string.
- */
-#define LEDQB_FULL_NAME      "3D LED Cube v1.0"
-
 /******************************************************************************
  * External Variables
  ******************************************************************************/

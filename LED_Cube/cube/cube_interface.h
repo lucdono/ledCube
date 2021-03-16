@@ -11,6 +11,7 @@
  * Defines
  ******************************************************************************/
 #define ADC_BUFFER_DEPTH      	256
+#define LEDQB_FULL_NAME      	"3D LED Cube v1.0"
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,7 +27,7 @@ void ledQB_board_plane_send(uint8_t *data, uint8_t size);
 uint32_t ledQB_board_plane_mask(uint8_t plane, uint32_t portStatus,
 		uint8_t pin0, uint8_t pin1, uint8_t pin2, uint8_t pinEnable);
 
-void ledQB_osal_sleep(uint8_t sleep_ms);
+void ledQB_osal_sleep(uint32_t sleep_ms);
 void ledQB_osal_lock(void);
 void ledQB_osal_unlock(void);
 void ledQB_osal_init(void);

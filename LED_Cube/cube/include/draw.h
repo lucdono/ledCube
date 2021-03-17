@@ -53,7 +53,6 @@ void ledQB_clrXLayer(uint8_t index);
 void ledQB_orLayer(uint8_t *layer, uint8_t index);
 void ledQB_plane(uint8_t plane, uint8_t axis);
 void ledQB_char(plane_t plane, uint8_t axis, char c, uint8_t f, uint8_t offset);
-uint8_t ledQB_cleared(void);
 color_t ledQB_getPoint(uint8_t x, uint8_t y, uint8_t z);
 
 #endif /* DRAW_H_ */

@@ -11,11 +11,8 @@
 /******************************************************************************
  * Defines
  ******************************************************************************/
-#define AUDIO_FFT					0
-#define AUDIO_VOLUME				1
-
-#define ADC_12BIT_MIN_VALUE			2048U
-#define ADC_12BIT_MAX_VALUE			4096U
+#define ADC_12BIT_MIN_VALUE			(2048U)
+#define ADC_12BIT_MAX_VALUE			(4096U-1U)
 
 /******************************************************************************
  * Internal Variables
@@ -64,6 +61,12 @@ static uint8_t get_amplitude(void) {
 /******************************************************************************
  * Functions
  ******************************************************************************/
+void f_adc_init(void) {
+	ready = false;
+	memset(full_samples, 0, ADC_BUFFER_DEPTH);
+	memset(height, 0, LEDQB_SIZE);
+}
+
 void f_adc(uint16_t frame) {
 	uint8_t y = 0;
 	uint8_t z = 0;
@@ -83,6 +86,7 @@ void f_adc(uint16_t frame) {
 				ledQB_point(point);
 			}
 		}
+		memset(full_samples, 0, ADC_BUFFER_DEPTH);
 	}
 
 	ready = false;

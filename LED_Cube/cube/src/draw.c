@@ -98,22 +98,10 @@ void ledQB_plane(uint8_t plane, uint8_t axis) {
 color_t ledQB_getPoint(uint8_t x, uint8_t y, uint8_t z) {
 	point_t p = { x, y, z, 0 };
 
-	if (ledQB_inRange(p)) {
-		return (BIT(y) & frame_buffer[z][x]);
+	if (ledQB_inRange(p) && (BIT(y) & frame_buffer[z][x])==BIT(y)) {
+		return (color_t) 1;
 	}
 	return (color_t) 0;
-}
-
-uint8_t ledQB_cleared(void) {
-	uint8_t i = 0;
-	uint8_t *ptr = &frame_buffer[0][0];
-
-	for (i = 0; i < LEDQB_SIZE*LEDQB_SIZE; i++) {
-		if (*ptr++)
-			return false;
-	}
-
-	return true;
 }
 
 void ledQB_char(plane_t plane, uint8_t axis, char c, uint8_t f, uint8_t offset) {

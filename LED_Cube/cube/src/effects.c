@@ -18,7 +18,6 @@
 #include "life.h"
 #include "pyramid.h"
 #include "write.h"
-#include "full.h"
 #include "adc.h"
 
 /******************************************************************************
@@ -37,10 +36,9 @@ static effect_t effects[] = {
 	{ "Spin",    true,    10000,  10,   10,   true,   NULL,                 f_spin          },
 	{ "Boing",   true,    10000,  50,   1,    true,   NULL,                 f_plane_boing   },
 	{ "Suspend", true,    10000,  100,  1,    false,  f_plane_suspend_init, f_plane_suspend },
-	{ "Life",    true,    10000,  200,  1,    false,  f_life_init,          f_life          },
+	{ "Life",    true,    10000,  100,  1,    false,  f_life_init,          f_life          },
 	{ "Pyramid", true,    10000,  25,   1,    false,  f_pyramid_init,       f_pyramid       },
-	{ "Volume",  true,    1000,   5,    -1,   false,  NULL,                 f_adc           },
-	{ "Full",    true,    2000,   5,    -1,   false,  NULL,                 f_full          },
+	{ "Volume",  true,    10000,  5,    -1,   false,  f_adc_init,           f_adc           },
 	{ "",        false,   0,      0,    0,    false,  NULL,                 NULL            }
 };
 
@@ -70,6 +68,13 @@ char* ledQB_get_currentEffect(void) {
 	if (currentEffect != NULL)
 		return currentEffect->name;
 	return NULL;
+}
+
+char *ledQB_get_Effect(uint8_t index){
+	if (effects[index].effectPtr == NULL) {
+		return NULL;
+	}
+	return effects[index].name;
 }
 
 bool ledQB_effects(uint8_t index) {
@@ -153,9 +158,10 @@ static void ledQB_update_effect(char *name) {
 	while (true) {
 		if (effects[n].effectPtr == NULL)
 			break;
-		if (strcmp(name, effects[n].name) == 0)
+		if (strcmp(name, effects[n].name) == 0){
 			effects[n].enable = true;
-		else
+			currentEffect = &effects[n];
+		}else
 			effects[n].enable = false;
 		n++;
 	}

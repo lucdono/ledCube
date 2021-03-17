@@ -10,8 +10,8 @@
 /******************************************************************************
  * Defines
  ******************************************************************************/
-#define ADC_BUFFER_DEPTH      	256
-#define LEDQB_FULL_NAME      	"3D LED Cube v1.0"
+#define ADC_BUFFER_DEPTH      	128
+#define LEDQB_FULL_NAME      	"3D LED Cube v2"
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,9 +41,11 @@ void ledQB_refresh(void);
 
 char *ledQB_get_runMode(void);
 char *ledQB_get_currentEffect(void);
+char *ledQB_get_Effect(uint8_t index);
 void ledQB_set_runMode(char *mode);
 
 void ledQB_adc_sample(uint16_t *adc_samples);
+void ledQB_Callback(void);
 
 #ifdef __cplusplus
 }

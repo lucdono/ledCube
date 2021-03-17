@@ -54,8 +54,11 @@ void BOARD_InitBootPins(void) {
     CLOCK_EnableClock(kCLOCK_Iocon);
     /* Enables the clock for the GPIO0 module */
     CLOCK_EnableClock(kCLOCK_Gpio0);
+    //CLOCK_EnableClock(kCLOCK_I2c0);
     /* Enable clock of spi0. */
     CLOCK_EnableClock(kCLOCK_Spi0);
+    /* Enables clock for switch matrix.: 0x01u */
+     CLOCK_EnableClock(kCLOCK_Swm);
 
     GPIO->DIR[0] = ((GPIO->DIR[0] &
                      /* Mask bits to zero which are setting */
@@ -228,6 +231,12 @@ void BOARD_InitBootPins(void) {
 
     /* SPI0_SSEL0 connect to P0_15 */
     SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_SSEL0, kSWM_PortPin_P0_15);
+
+    /* I2C0_SDA connect to P0_11 */
+    SWM_SetFixedPinSelect(SWM0, kSWM_I2C0_SDA, true);
+
+    /* I2C0_SCL connect to P0_10 */
+    SWM_SetFixedPinSelect(SWM0, kSWM_I2C0_SCL, true);
 
     /* Disable clock for switch matrix. */
     CLOCK_DisableClock(kCLOCK_Swm);

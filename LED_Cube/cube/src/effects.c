@@ -25,20 +25,48 @@
  ******************************************************************************/
 static effect_t effects[] = {
 	/* NAME      ENABLE   ELAPSE  WAIT  RATE  CLEAR   INIT                  RUN             */
+#ifdef ENABLE_EFFECT_TEXT
 	{ "Text",    true,    1000,   60,   1,    true,   f_write_init,         f_write         },
+#endif
+#ifdef ENABLE_EFFECT_RIPPLE
 	{ "Ripple",  true,    10000,  20,   10,   true,   NULL,                 f_ripple        },
+#endif
+#ifdef ENABLE_EFFECT_WAVE
 	{ "Wave",    true,    10000,  25,   20,   true,   NULL,                 f_wave          },
+#endif
+#ifdef ENABLE_EFFECT_SPHERE
 	{ "Sphere",  true,    10000,  50,   -1,   true,   f_spheres_init,       f_spheres       },
+#endif
+#ifdef ENABLE_EFFECT_CUBES
 	{ "Cubes",   true,    10000,  40,   1,    true,   f_cubes_init,         f_cubes         },
+#endif
+#ifdef ENABLE_EFFECT_RAIN
 	{ "Rain",    true,    10000,  60,   1,    false,  NULL,                 f_rain          },
+#endif
+#ifdef ENABLE_EFFECT_MOVE
 	{ "Move" ,   true,    10000,  50,   1,    true,   f_cubes_init,         f_cubes_move    },
+#endif
+#ifdef ENABLE_EFFECT_SPIRAL
 	{ "Spiral",  true,    10000,  25,   15,   true,   NULL,                 f_spiral        },
+#endif
+#ifdef ENABLE_EFFECT_SPIN
 	{ "Spin",    true,    10000,  10,   10,   true,   NULL,                 f_spin          },
+#endif
+#ifdef ENABLE_EFFECT_BOING
 	{ "Boing",   true,    10000,  50,   1,    true,   NULL,                 f_plane_boing   },
+#endif
+#ifdef ENABLE_EFFECT_SUSPEND
 	{ "Suspend", true,    10000,  100,  1,    false,  f_plane_suspend_init, f_plane_suspend },
+#endif
+#ifdef ENABLE_EFFECT_LIFE
 	{ "Life",    true,    10000,  100,  1,    false,  f_life_init,          f_life          },
+#endif
+#ifdef ENABLE_EFFECT_PYRAMID
 	{ "Pyramid", true,    10000,  25,   1,    false,  f_pyramid_init,       f_pyramid       },
+#endif
+#ifdef ENABLE_EFFECT_VOLUME
 	{ "Volume",  true,    10000,  5,    -1,   false,  f_adc_init,           f_adc           },
+#endif
 	{ "",        false,   0,      0,    0,    false,  NULL,                 NULL            }
 };
 

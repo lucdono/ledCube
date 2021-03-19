@@ -68,6 +68,9 @@ void BOARD_InitBootPins(void) {
                      * depends on the specific device and package. 0 = input. 1 = output.: 0x1000u */
                     | GPIO_DIR_DIRP(0x1E030000u));
 
+    /*
+     * 8-bit Decoder drivers
+     */
     const uint32_t IOCON_INDEX_PIO0_25_config = (/* Selects pull-up function */
                                                  IOCON_PIO_MODE_PULLUP |
                                                  /* Enable hysteresis */
@@ -80,7 +83,6 @@ void BOARD_InitBootPins(void) {
                                                  IOCON_PIO_SMODE_BYPASS |
                                                  /* IOCONCLKDIV0 */
                                                  IOCON_PIO_CLKDIV0);
-    /* PORT0 PIN0 (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_25, IOCON_INDEX_PIO0_25_config);
 
     const uint32_t IOCON_INDEX_PIO0_26_config = (/* Selects pull-up function */
@@ -95,7 +97,6 @@ void BOARD_InitBootPins(void) {
                                                  IOCON_PIO_SMODE_BYPASS |
                                                  /* IOCONCLKDIV0 */
                                                  IOCON_PIO_CLKDIV0);
-    /* PORT0 PIN1 (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_26, IOCON_INDEX_PIO0_26_config);
 
     const uint32_t IOCON_INDEX_PIO0_27_config = (/* Selects pull-up function */
@@ -110,7 +111,6 @@ void BOARD_InitBootPins(void) {
                                                  IOCON_PIO_SMODE_BYPASS |
                                                  /* IOCONCLKDIV0 */
                                                  IOCON_PIO_CLKDIV0);
-    /* PORT2 PIN0 (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_27, IOCON_INDEX_PIO0_27_config);
 
     const uint32_t IOCON_INDEX_PIO0_28_config = (/* Selects pull-up function */
@@ -125,9 +125,12 @@ void BOARD_InitBootPins(void) {
                                                  IOCON_PIO_SMODE_BYPASS |
                                                  /* IOCONCLKDIV0 */
                                                  IOCON_PIO_CLKDIV0);
-    /* PORT3 PIN0 (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_28, IOCON_INDEX_PIO0_28_config);
+    /**/
 
+    /*
+     * Board LEDS
+     */
     const uint32_t IOCON_INDEX_PIO0_15_config = (/* Selects pull-up function */
                                                  IOCON_PIO_MODE_PULLUP |
                                                  /* Enable hysteresis */
@@ -140,7 +143,6 @@ void BOARD_InitBootPins(void) {
                                                  IOCON_PIO_SMODE_BYPASS |
                                                  /* IOCONCLKDIV0 */
                                                  IOCON_PIO_CLKDIV0);
-    /* PORT0 PIN15 (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_15, IOCON_INDEX_PIO0_15_config);
 
     const uint32_t IOCON_INDEX_PIO0_16_config = (/* Selects pull-up function */
@@ -155,7 +157,6 @@ void BOARD_InitBootPins(void) {
                                                  IOCON_PIO_SMODE_BYPASS |
                                                  /* IOCONCLKDIV0 */
                                                  IOCON_PIO_CLKDIV0);
-    /* PORT0 PIN16 (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_16, IOCON_INDEX_PIO0_16_config);
 
     const uint32_t IOCON_INDEX_PIO0_17_config = (/* Selects pull-up function */
@@ -170,24 +171,12 @@ void BOARD_InitBootPins(void) {
                                                  IOCON_PIO_SMODE_BYPASS |
                                                  /* IOCONCLKDIV0 */
                                                  IOCON_PIO_CLKDIV0);
-    /* PORT0 PIN17 (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_17, IOCON_INDEX_PIO0_17_config);
+    /**/
 
-    const uint32_t pio14_config = (/* Selects pull-up function */
-                                   IOCON_PIO_MODE_PULLUP |
-                                   /* Enable hysteresis */
-                                   IOCON_PIO_HYS_EN |
-                                   /* Input not invert */
-                                   IOCON_PIO_INV_DI |
-                                   /* Disables Open-drain function */
-                                   IOCON_PIO_OD_DI |
-                                   /* Bypass input filter */
-                                   IOCON_PIO_SMODE_BYPASS |
-                                   /* IOCONCLKDIV0 */
-                                   IOCON_PIO_CLKDIV0);
-    /* PORT0 PIN14 (coords: ) is configured as  */
-    IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_14, pio14_config);
-
+    /*
+     * User buttons
+     */
     const uint32_t pio1_config = (/* Selects pull-up function */
                                   IOCON_PIO_MODE_PULLUP |
                                   /* Enable hysteresis */
@@ -200,7 +189,6 @@ void BOARD_InitBootPins(void) {
                                   IOCON_PIO_SMODE_BYPASS |
                                   /* IOCONCLKDIV0 */
                                   IOCON_PIO_CLKDIV0);
-    /* PORT1 PIN (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_1, pio1_config);
 
     const uint32_t pio6_config = (/* Selects pull-up function */
@@ -215,27 +203,26 @@ void BOARD_InitBootPins(void) {
                                   IOCON_PIO_SMODE_BYPASS |
                                   /* IOCONCLKDIV0 */
                                   IOCON_PIO_CLKDIV0);
-    /* PORT1 PIN (coords: ) is configured as  */
     IOCON_PinMuxSet(IOCON, IOCON_INDEX_PIO0_6, pio6_config);
+    /**/
 
+    /*
+     * ADC
+     */
     SWM_SetFixedPinSelect(SWM0, kSWM_ADC_CHN0, true);
 
-    /* SPI0_SCK connect to P0_14 */
+    /*
+     * SPI
+     */
     SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_SCK, kSWM_PortPin_P0_14);
-
-    /* SPI0_MOSI connect to P0_12 */
     SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_MOSI, kSWM_PortPin_P0_12);
-
-    /* SPI0_MISO connect to P0_12 */
     SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_MISO, kSWM_PortPin_P0_13);
-
-    /* SPI0_SSEL0 connect to P0_15 */
     SWM_SetMovablePinSelect(SWM0, kSWM_SPI0_SSEL0, kSWM_PortPin_P0_15);
 
-    /* I2C0_SDA connect to P0_11 */
+    /*
+     * I2C
+     */
     SWM_SetFixedPinSelect(SWM0, kSWM_I2C0_SDA, true);
-
-    /* I2C0_SCL connect to P0_10 */
     SWM_SetFixedPinSelect(SWM0, kSWM_I2C0_SCL, true);
 
     /* Disable clock for switch matrix. */

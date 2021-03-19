@@ -1,3 +1,24 @@
+/*
+ * 3D LED CUBE SSD1306 Implementation
+ *
+ * Copyright (C) 2021 Luca D'Onofrio.
+ *
+ * This file is part of LEDCube Project
+ *
+ * LEDCube is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LEDCube is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /******************************************************************************
  * Includes
  ******************************************************************************/
@@ -9,29 +30,52 @@
 /******************************************************************************
  * Internal Variables
  ******************************************************************************/
+
+/*
+ * Display buffer
+ */
 static uint8_t SSD1306_Buffer[(DISPLAY_WIDTH * DISPLAY_HEIGHT) / 8];
+
+/*
+ * Current font
+ */
 static const uint8_t *font = &ssd1306xled_font6x8[0];
 
+/*
+ * Pre-scroll commands
+ */
 static const uint8_t pre_scroll[] = {
 		SSD1306_LEFT_HORIZONTAL_SCROLL, 0X00
 };
 
+/*
+ * Post-scroll commands
+ */
 static const uint8_t post_scroll[] = {
 		0X00, 0XFF,
 		SSD1306_ACTIVATE_SCROLL
 };
 
+/*
+ * Update commands
+ */
 static const uint8_t update[] = {
 		0xb0,
 		(((0 & 0xf0) >> 4) | 0x10),
 		(0 & 0x0f) | 0x01,
 };
 
+/*
+ * Reset commands
+ */
 static const uint8_t reset[] = {
 		SSD1306_DISPLAYON,
 		SSD1306_DISPLAYOFF,
 		SSD1306_DISPLAYON, };
 
+/*
+ * SSD1306 128x64 configuration commands
+ */
 static const uint8_t configuration[] = {
 	SSD1306_DISPLAYOFF,
 	SSD1306_SETDISPLAYCLOCKDIV, 0x80,
@@ -168,5 +212,9 @@ void Display_ScrollLeft(uint8_t firstRow, uint8_t lastRow) {
 	SSD1306_CommandList(&post_scroll[0], sizeof(post_scroll));
 }
 
+
+/*------------------------------------------------------------------------------
+ Weak symbol definition for specific IO functions
+ -----------------------------------------------------------------------------*/
 __attribute__ ((weak)) void SSD1306_Command(uint8_t command) {}
 __attribute__ ((weak)) void SSD1306_Data(uint8_t *data, size_t size) {}

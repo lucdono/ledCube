@@ -1,3 +1,24 @@
+/*
+ * 3D LED CUBE LPC824 Implementation
+ *
+ * Copyright (C) 2021 Luca D'Onofrio.
+ *
+ * This file is part of LEDCube Project
+ *
+ * LEDCube is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LEDCube is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /******************************************************************************
  * Includes
  ******************************************************************************/
@@ -40,6 +61,15 @@
  *   - DEC_BIT1 [B]     -->  PIN0_26
  *   - DEC_BIT2 [C]     -->  PIN0_27
  *   - DEC_EN   [D]     -->  PIN0_28
+ *
+ * GPIO0 - > User buttons:
+ *   - Mode Selection   -->  PIN0_06
+ *   - Effect skip      -->  PIN0_01
+ *
+ * GPIO0 - > Board LEDs:
+ *   - Red   			-->  PIN0_15
+ *   - Green      		-->  PIN0_16
+ *   - Blue				-->	 PIN0_17
  *
  * ADC CH0 -> Mic:
  *   - ADC0      		-->  PIN0_07
@@ -122,6 +152,10 @@ static void effect_mode_callback(pint_pin_int_t pintr, uint32_t pmatch_status);
 /*------------------------------------------------------------------------------
  Cube OS/IO APIs implementations
  -----------------------------------------------------------------------------*/
+
+/*
+ * Board devices initialisations
+ */
 void ledQB_board_init(void) {
 	GPIO_Configuration();
 	SPI_Configuration();
@@ -129,6 +163,9 @@ void ledQB_board_init(void) {
 	OLED_Configuration();
 }
 
+/*
+ * OLED Display initialisation
+ */
 static void OLED_Configuration(void) {
 	i2c_master_config_t masterConfig;
 
@@ -142,7 +179,85 @@ static void OLED_Configuration(void) {
 	Display_Update();
 }
 
-static void displayString(char *text) {
+/*
+ * GPIO Display initialisation
+ */
+static void GPIO_Configuration(void) {
+	SYSCON_AttachSignal(SYSCON, kPINT_PinInt0, kSYSCON_GpioPort0Pin1ToPintsel);
+	PINT_PinInterruptConfig(PINT, kPINT_PinInt0, kPINT_PinIntEnableRiseEdge,
+			effect_switch_callback);
+	PINT_EnableCallbackByIndex(PINT, kPINT_PinInt0);
+
+	SYSCON_AttachSignal(SYSCON, kPINT_PinInt1, kSYSCON_GpioPort0Pin6ToPintsel);
+	PINT_PinInterruptConfig(PINT, kPINT_PinInt1, kPINT_PinIntEnableRiseEdge,
+			effect_mode_callback);
+	PINT_EnableCallbackByIndex(PINT, kPINT_PinInt1);
+}
+
+/*
+ * SPI Display initialisation
+ */
+static void SPI_Configuration(void) {
+	spi_master_config_t userConfig = { 0 };
+	uint32_t srcFreq = 0U;
+
+	SPI_MasterGetDefaultConfig(&userConfig);
+	userConfig.baudRate_Bps = 500000U;
+	userConfig.sselNumber = kSPI_Ssel0Assert;
+	userConfig.clockPolarity = kSPI_ClockPolarityActiveLow;
+	userConfig.direction = kSPI_MsbFirst;
+	userConfig.clockPhase = kSPI_ClockPhaseSecondEdge;
+	userConfig.dataWidth = kSPI_Data8Bits;
+	userConfig.sselPolarity = kSPI_SpolActiveAllHigh;
+	userConfig.delayConfig.postDelay = 0x00;
+	userConfig.delayConfig.preDelay = 0x00;
+	userConfig.delayConfig.frameDelay = 0x00;
+	userConfig.delayConfig.transferDelay = 0x00;
+
+	srcFreq = CLOCK_GetFreq(kCLOCK_MainClk);
+	SPI_MasterInit(SPI0, &userConfig, srcFreq);
+}
+
+/*
+ * ADC Display initialisation
+ */
+static void ADC_Configuration(void) {
+
+	POWER_DisablePD(kPDRUNCFG_PD_ADC0);
+
+	uint32_t frequency = CLOCK_GetFreq(kCLOCK_Irc);
+	ADC_DoSelfCalibration(ADC0, frequency);
+
+	adc_config_t adcConfigStruct;
+	adc_conv_seq_config_t adcConvSeqConfigStruct;
+
+	adcConfigStruct.clockDividerNumber = ADC_CLOCK_DIVIDER;
+	adcConfigStruct.enableLowPowerMode = false;
+	ADC_Init(ADC0, &adcConfigStruct);
+
+	adcConvSeqConfigStruct.channelMask = (1U << ADC_SAMPLE_CHANNEL); /* Includes channel DEMO_ADC_SAMPLE_CHANNEL_NUMBER. */
+	adcConvSeqConfigStruct.triggerMask = 0U;
+	adcConvSeqConfigStruct.triggerPolarity = kADC_TriggerPolarityPositiveEdge;
+	adcConvSeqConfigStruct.enableSingleStep = false;
+	adcConvSeqConfigStruct.enableSyncBypass = false;
+	adcConvSeqConfigStruct.interruptMode = kADC_InterruptForEachSequence;
+	ADC_SetConvSeqAConfig(ADC0, &adcConvSeqConfigStruct);
+	ADC_EnableConvSeqA(ADC0, true); /* Enable the conversion sequence A. */
+
+	ADC_DoSoftwareTriggerConvSeqA(ADC0);
+	while (!ADC_GetChannelConversionResult(ADC0, ADC_SAMPLE_CHANNEL,
+			&gAdcResultInfoStruct)) {
+	}
+	ADC_GetConvSeqAGlobalConversionResult(ADC0, &gAdcResultInfoStruct);
+
+	ADC_EnableInterrupts(ADC0, kADC_ConvSeqAInterruptEnable);
+	NVIC_EnableIRQ(ADC0_SEQA_IRQn);
+}
+
+/*
+ * OLED Display update
+ */
+static void displayUpdate(char *text) {
 	uint8_t column = 6 * strlen(STR_EFFECT);
 	Display_ScrollStop();
 
@@ -185,21 +300,9 @@ static void displayString(char *text) {
 	Display_ScrollLeft(1, 2);
 }
 
-void SSD1306_Command(uint8_t command) {
-	i2c_master_transfer_t xfer = { 0 };
-
-	xfer.data = (uint8_t*) &command;
-	xfer.dataSize = sizeof(command);
-	xfer.flags = kI2C_TransferDefaultFlag;
-	xfer.slaveAddress = SSD1306_7BITS_ADDRESS;
-	xfer.direction = kI2C_Write;
-	xfer.subaddress = SSD1306_COMMAND;
-	xfer.subaddressSize = 1;
-
-	I2C_MasterTransferBlocking(I2C_MASTER, &xfer);
-
-}
-
+/*
+ * Low-level Display I2C IO data streams
+ */
 void SSD1306_Data(uint8_t *data, size_t size) {
 	i2c_master_transfer_t xfer = { 0 };
 
@@ -208,12 +311,32 @@ void SSD1306_Data(uint8_t *data, size_t size) {
 	xfer.flags = kI2C_TransferDefaultFlag;
 	xfer.slaveAddress = SSD1306_7BITS_ADDRESS;
 	xfer.direction = kI2C_Write;
-	xfer.subaddress = SSD1306_DATA;
+	xfer.subaddress = SSD1306_DATA;		/* Data */
 	xfer.subaddressSize = 1;
 
 	I2C_MasterTransferBlocking(I2C_MASTER, &xfer);
 }
 
+/*
+ * Low-level Display I2C IO command
+ */
+void SSD1306_Command(uint8_t command) {
+	i2c_master_transfer_t xfer = { 0 };
+
+	xfer.data = (uint8_t *)&command;
+	xfer.dataSize = sizeof(command);
+	xfer.flags = kI2C_TransferDefaultFlag;
+	xfer.slaveAddress = SSD1306_7BITS_ADDRESS;
+	xfer.direction = kI2C_Write;
+	xfer.subaddress = SSD1306_COMMAND;	/* Command */
+	xfer.subaddressSize = 1;
+
+	I2C_MasterTransferBlocking(I2C_MASTER, &xfer);
+}
+
+/*------------------------------------------------------------------------------
+ Cube IO specific functions implementation (i.e. weak symbols redefinition)
+ -----------------------------------------------------------------------------*/
 void ledQB_board_plane_select(uint8_t plane) {
 	GPIO_PortClear(GPIO, BOARD_PORT, 1u << PLANE_DEC_EN);
 	uint32_t mask = ledQB_board_plane_mask(plane,
@@ -267,72 +390,6 @@ void ledQB_osal_init(void) {
 			(TaskHandle_t *) NULL);
 }
 
-static void GPIO_Configuration(void) {
-	SYSCON_AttachSignal(SYSCON, kPINT_PinInt0, kSYSCON_GpioPort0Pin1ToPintsel);
-	PINT_PinInterruptConfig(PINT, kPINT_PinInt0, kPINT_PinIntEnableRiseEdge,
-			effect_switch_callback);
-	PINT_EnableCallbackByIndex(PINT, kPINT_PinInt0);
-
-	SYSCON_AttachSignal(SYSCON, kPINT_PinInt1, kSYSCON_GpioPort0Pin6ToPintsel);
-	PINT_PinInterruptConfig(PINT, kPINT_PinInt1, kPINT_PinIntEnableRiseEdge,
-			effect_mode_callback);
-	PINT_EnableCallbackByIndex(PINT, kPINT_PinInt1);
-}
-
-static void SPI_Configuration(void) {
-	spi_master_config_t userConfig = { 0 };
-	uint32_t srcFreq = 0U;
-
-	SPI_MasterGetDefaultConfig(&userConfig);
-	userConfig.baudRate_Bps = 500000U;
-	userConfig.sselNumber = kSPI_Ssel0Assert;
-	userConfig.clockPolarity = kSPI_ClockPolarityActiveLow;
-	userConfig.direction = kSPI_MsbFirst;
-	userConfig.clockPhase = kSPI_ClockPhaseSecondEdge;
-	userConfig.dataWidth = kSPI_Data8Bits;
-	userConfig.sselPolarity = kSPI_SpolActiveAllHigh;
-	userConfig.delayConfig.postDelay = 0x00;
-	userConfig.delayConfig.preDelay = 0x00;
-	userConfig.delayConfig.frameDelay = 0x00;
-	userConfig.delayConfig.transferDelay = 0x00;
-
-	srcFreq = CLOCK_GetFreq(kCLOCK_MainClk);
-	SPI_MasterInit(SPI0, &userConfig, srcFreq);
-}
-
-static void ADC_Configuration(void) {
-
-	POWER_DisablePD(kPDRUNCFG_PD_ADC0);
-
-	uint32_t frequency = CLOCK_GetFreq(kCLOCK_Irc);
-	ADC_DoSelfCalibration(ADC0, frequency);
-
-	adc_config_t adcConfigStruct;
-	adc_conv_seq_config_t adcConvSeqConfigStruct;
-
-	adcConfigStruct.clockDividerNumber = ADC_CLOCK_DIVIDER;
-	adcConfigStruct.enableLowPowerMode = false;
-	ADC_Init(ADC0, &adcConfigStruct);
-
-	adcConvSeqConfigStruct.channelMask = (1U << ADC_SAMPLE_CHANNEL); /* Includes channel DEMO_ADC_SAMPLE_CHANNEL_NUMBER. */
-	adcConvSeqConfigStruct.triggerMask = 0U;
-	adcConvSeqConfigStruct.triggerPolarity = kADC_TriggerPolarityPositiveEdge;
-	adcConvSeqConfigStruct.enableSingleStep = false;
-	adcConvSeqConfigStruct.enableSyncBypass = false;
-	adcConvSeqConfigStruct.interruptMode = kADC_InterruptForEachSequence;
-	ADC_SetConvSeqAConfig(ADC0, &adcConvSeqConfigStruct);
-	ADC_EnableConvSeqA(ADC0, true); /* Enable the conversion sequence A. */
-
-	ADC_DoSoftwareTriggerConvSeqA(ADC0);
-	while (!ADC_GetChannelConversionResult(ADC0, ADC_SAMPLE_CHANNEL,
-			&gAdcResultInfoStruct)) {
-	}
-	ADC_GetConvSeqAGlobalConversionResult(ADC0, &gAdcResultInfoStruct);
-
-	ADC_EnableInterrupts(ADC0, kADC_ConvSeqAInterruptEnable);
-	NVIC_EnableIRQ(ADC0_SEQA_IRQn);
-}
-
 /*------------------------------------------------------------------------------
  Handlers
  -----------------------------------------------------------------------------*/
@@ -373,7 +430,7 @@ static void effect_mode_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
 	}
 
 	char *effect = ledQB_get_currentEffect();
-	displayString(effect);
+	displayUpdate(effect);
 }
 
 void ADC0_SEQA_IRQHandler(void) {
@@ -390,13 +447,16 @@ void ADC0_SEQA_IRQHandler(void) {
 
 void ledQB_Callback(void) {
 	char *effect = ledQB_get_currentEffect();
-	displayString(effect);
+	displayUpdate(effect);
 }
 
 /*------------------------------------------------------------------------------
  Application OS threads
  -----------------------------------------------------------------------------*/
 
+/*
+ * Cube effects sequence thread
+ */
 static void vTaskEffects(void *pvParameters) {
 	uint8_t i = 0;
 	char *oldEffect = NULL;
@@ -405,7 +465,7 @@ static void vTaskEffects(void *pvParameters) {
 		if (mode == MODE_ALL) {
 			char *effect = ledQB_get_Effect(i);
 			if (oldEffect != effect)
-				displayString(effect);
+				displayUpdate(effect);
 		}
 
 		if (ledQB_effects(i))
@@ -417,6 +477,9 @@ static void vTaskEffects(void *pvParameters) {
 	}
 }
 
+/*
+ * Cube refresh thread
+ */
 static void vTaskRefresh(void *pvParameters) {
 	while (true) {
 		ledQB_refresh();
@@ -424,6 +487,9 @@ static void vTaskRefresh(void *pvParameters) {
 	}
 }
 
+/*
+ * ADC sampling thread
+ */
 static void vTaskADC(void *pvParameters) {
 	uint16_t n = 0;
 	while (true) {

@@ -75,8 +75,10 @@ static uint8_t get_amplitude(void) {
 			signalMin = value;
 		}
 	}
-	return map((signalMax - signalMin), ADC_12BIT_MIN_VALUE,
-			ADC_12BIT_MAX_VALUE, 0, LEDQB_SIZE);
+	return map((signalMax - signalMin),
+			((ADC_12BIT_MIN_VALUE & 0xFFF0U) >> 4),
+			((ADC_12BIT_MAX_VALUE & 0xFFF0U) >> 4),
+			0, LEDQB_SIZE);
 }
 
 /******************************************************************************

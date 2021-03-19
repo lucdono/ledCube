@@ -441,7 +441,7 @@ void ADC0_SEQA_IRQHandler(void) {
 		ADC_GetChannelConversionResult(ADC0, ADC_SAMPLE_CHANNEL,
 				gAdcResultInfoPtr);
 		ADC_ClearStatusFlags(ADC0, kADC_ConvSeqAInterruptFlag);
-		adc_samples[sample++ % ADC_BUFFER_DEPTH] = gAdcResultInfoStruct.result;
+		adc_samples[sample++ % ADC_BUFFER_DEPTH] = ((gAdcResultInfoStruct.result & ADC_DAT_RESULT_MASK) >> ADC_DAT_RESULT_SHIFT);
 	}
 }
 

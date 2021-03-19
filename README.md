@@ -1,0 +1,6 @@
+# LedCube Hardware
+
+LED Cube hardware project has been designed and realized by:
+ - Rocco Marco Guglielmi / Marisa Monaco
+ - Tony Galano
+ - Giovanni Di Sirio

@@ -109,5 +109,4 @@ __attribute__ ((weak)) uint32_t ledQB_osal_time_now(void) {	return 0; }
 __attribute__ ((weak)) void ledQB_osal_lock(void) {}
 __attribute__ ((weak)) void ledQB_osal_unlock(void) {}
 __attribute__ ((weak)) void ledQB_osal_init(void) {}
-__attribute__ ((weak)) void ledQB_Callback(void) {}
 

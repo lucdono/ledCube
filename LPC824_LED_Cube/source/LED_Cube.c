@@ -393,6 +393,10 @@ void ledQB_osal_init(void) {
 /*------------------------------------------------------------------------------
  Handlers
  -----------------------------------------------------------------------------*/
+uint16_t life_effect_callback(void) {
+	char *effect = ledQB_get_currentEffect();
+	displayUpdate(effect);
+}
 
 static void effect_switch_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
 	ledQB_quit_effect();
@@ -443,11 +447,6 @@ void ADC0_SEQA_IRQHandler(void) {
 		ADC_ClearStatusFlags(ADC0, kADC_ConvSeqAInterruptFlag);
 		adc_samples[sample++ % ADC_BUFFER_DEPTH] = ((gAdcResultInfoStruct.result & ADC_DAT_RESULT_MASK) >> ADC_DAT_RESULT_SHIFT);
 	}
-}
-
-void ledQB_Callback(void) {
-	char *effect = ledQB_get_currentEffect();
-	displayUpdate(effect);
 }
 
 /*------------------------------------------------------------------------------

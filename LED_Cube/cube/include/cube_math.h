@@ -40,11 +40,6 @@
  */
 #define CUBEMATH_SIN	10000
 
-/*
- * Scale a value in range (a,b) to a value in range (x,y)
- */
-#define map(value, a, b, x, y) (((float)(value - a)) / ((float)(b - a)) * ((float)(y - x)) + (float)x)
-
 /******************************************************************************
  * External Variables
  ******************************************************************************/

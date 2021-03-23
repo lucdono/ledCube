@@ -52,8 +52,8 @@
 /*
  * SPI0 -> Shift Registers:
  *   - SCK              -->  PIN0_14
- *   - MISO             -->  PIN0_12
- *   - MOSI             -->  PIN0_13
+ *   - MISO             -->  PIN0_13
+ *   - MOSI             -->  PIN0_12
  *   - CS               -->  PIN0_15
  *
  * GPIO0 - > Decoder 3 to 8:
@@ -75,8 +75,8 @@
  *   - ADC0      		-->  PIN0_07
  *
  * I2C0 -> Display:
- *   - SDS      		-->  PIN0_10
- *   - SCL      		-->  PIN0_11
+ *   - SCL      		-->  PIN0_10
+ *   - SDA      		-->  PIN0_11
  *
  */
 #define PLANE_SPI_SCK			14U
@@ -98,6 +98,9 @@
 
 #define ADC_SAMPLE_CHANNEL 		0U
 #define ADC_CLOCK_DIVIDER 		1U
+#define ADC_DEFAULT_MAX 		150U
+#define ADC_DEFAULT_MIN 		100U
+#define ADC_DEFAULT_INCREMENT	(-10)
 
 #define MODE_ALL		 		0U
 #define MODE_FIXED		 		1U
@@ -119,12 +122,13 @@
  * Internal Variables
  ******************************************************************************/
 static SemaphoreHandle_t mutex_v;
-static uint16_t sample = 0;
 static adc_result_info_t gAdcResultInfoStruct;
 adc_result_info_t *volatile gAdcResultInfoPtr = &gAdcResultInfoStruct;
 static uint16_t adc_samples[ADC_BUFFER_DEPTH];
 static uint8_t mode = 0;
 static char score[SCORE_SIZE];
+volatile bool gAdcConvSeqAIntFlag;
+static uint16_t max_sensivity = ADC_DEFAULT_MAX;
 
 /******************************************************************************
  * External Variables
@@ -311,7 +315,7 @@ void SSD1306_Data(uint8_t *data, size_t size) {
 	xfer.flags = kI2C_TransferDefaultFlag;
 	xfer.slaveAddress = SSD1306_7BITS_ADDRESS;
 	xfer.direction = kI2C_Write;
-	xfer.subaddress = SSD1306_DATA;		/* Data */
+	xfer.subaddress = SSD1306_DATA; /* Data */
 	xfer.subaddressSize = 1;
 
 	I2C_MasterTransferBlocking(I2C_MASTER, &xfer);
@@ -323,12 +327,12 @@ void SSD1306_Data(uint8_t *data, size_t size) {
 void SSD1306_Command(uint8_t command) {
 	i2c_master_transfer_t xfer = { 0 };
 
-	xfer.data = (uint8_t *)&command;
+	xfer.data = (uint8_t *) &command;
 	xfer.dataSize = sizeof(command);
 	xfer.flags = kI2C_TransferDefaultFlag;
 	xfer.slaveAddress = SSD1306_7BITS_ADDRESS;
 	xfer.direction = kI2C_Write;
-	xfer.subaddress = SSD1306_COMMAND;	/* Command */
+	xfer.subaddress = SSD1306_COMMAND; /* Command */
 	xfer.subaddressSize = 1;
 
 	I2C_MasterTransferBlocking(I2C_MASTER, &xfer);
@@ -396,10 +400,51 @@ void ledQB_osal_init(void) {
 uint16_t life_effect_callback(void) {
 	char *effect = ledQB_get_currentEffect();
 	displayUpdate(effect);
+
+	return 0;
+}
+
+uint16_t adc_effect_callback(void) {
+	uint16_t signalMax = 0;
+	uint16_t signalMin = UINT16_MAX;
+	uint16_t value = 0;
+	uint16_t i = 0;
+
+	for (i = 0; i < ADC_BUFFER_DEPTH; i++) {
+		value = adc_samples[i];
+		if (value > signalMax) {
+			signalMax = value;
+		} else if (value < signalMin) {
+			signalMin = value;
+		}
+	}
+
+	return map((signalMax - signalMin), 0, max_sensivity, 0, LEDQB_SIZE);
 }
 
 static void effect_switch_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
-	ledQB_quit_effect();
+
+	switch (mode) {
+	case MODE_ALL: {
+		ledQB_quit_effect();
+	}
+		break;
+	case MODE_FIXED: {
+		/* Do nothing */
+	}
+		break;
+	case MODE_VOLUME: {
+		max_sensivity = max_sensivity+ADC_DEFAULT_INCREMENT;
+		if ( max_sensivity < ADC_DEFAULT_MIN)
+			max_sensivity = ADC_DEFAULT_MAX;
+	}
+		break;
+	case MODE_LIFE: {
+		/* Do nothing */
+	}
+		break;
+	}
+
 }
 
 static void effect_mode_callback(pint_pin_int_t pintr, uint32_t pmatch_status) {
@@ -445,7 +490,8 @@ void ADC0_SEQA_IRQHandler(void) {
 		ADC_GetChannelConversionResult(ADC0, ADC_SAMPLE_CHANNEL,
 				gAdcResultInfoPtr);
 		ADC_ClearStatusFlags(ADC0, kADC_ConvSeqAInterruptFlag);
-		adc_samples[sample++ % ADC_BUFFER_DEPTH] = ((gAdcResultInfoStruct.result & ADC_DAT_RESULT_MASK) >> ADC_DAT_RESULT_SHIFT);
+        gAdcConvSeqAIntFlag = true;
+
 	}
 }
 
@@ -490,13 +536,15 @@ static void vTaskRefresh(void *pvParameters) {
  * ADC sampling thread
  */
 static void vTaskADC(void *pvParameters) {
-	uint16_t n = 0;
-	while (true) {
-		for (n = 0; n < ADC_BUFFER_DEPTH; n++)
-			ADC_EnableConvSeqABurstMode(ADC0, true);
+	uint8_t sample = 0;
 
-		ledQB_adc_sample(adc_samples);
-		vTaskDelay(1);
+	while (true) {
+		ADC_EnableConvSeqABurstMode(ADC0, true);
+		while (!gAdcConvSeqAIntFlag) {
+			vTaskDelay(1);
+		}
+		adc_samples[sample++ % ADC_BUFFER_DEPTH] = ((gAdcResultInfoStruct.result
+				& ADC_DAT_RESULT_MASK) >> ADC_DAT_RESULT_SHIFT);
 	}
 }
 

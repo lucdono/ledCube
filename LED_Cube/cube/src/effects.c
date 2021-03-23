@@ -86,7 +86,7 @@ static effect_t effects[] = {
 	{ "Pyramid", true,    10000,  25,   1,    false,  f_pyramid_init,       f_pyramid,			NULL    				},
 #endif
 #ifdef ENABLE_EFFECT_VOLUME
-	{ "Volume",  true,    10000,  5,    -1,   false,  f_adc_init,           f_adc,				NULL    				},
+	{ "Volume",  true,    10000,  5,    -1,   false,  NULL,           		f_adc,				adc_effect_callback    	},
 #endif
 	{ "",        false,   0,      0,    0,    false,  NULL,                 NULL,				NULL    				}
 };

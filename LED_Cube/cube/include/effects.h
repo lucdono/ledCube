@@ -54,6 +54,7 @@ typedef struct {
 	bool clear;								/* Clear the cube after each frame */
 	void (*initPtr)(void);					/* Effect initialisation function */
 	void (*effectPtr)(uint16_t frame);		/* Effect algorithm */
+	uint16_t (*callback)(void);				/* Effect callback */
 } effect_t;
 
 /******************************************************************************

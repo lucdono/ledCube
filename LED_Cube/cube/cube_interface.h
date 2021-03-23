@@ -33,6 +33,11 @@
  ******************************************************************************/
 
 /*
+ * Size of the LED cube
+ */
+#define LEDQB_SIZE    			8
+
+/*
  * ADC sampling buffer depth
  * */
 #define ADC_BUFFER_DEPTH      	128
@@ -59,6 +64,11 @@
 #define ENABLE_EFFECT_LIFE
 #define ENABLE_EFFECT_PYRAMID
 #define ENABLE_EFFECT_VOLUME
+
+/*
+ * Scale a value in range (a,b) to a value in range (x,y)
+ */
+#define map(value, a, b, x, y) (((float)(value - a)) / ((float)(b - a)) * ((float)(y - x)) + (float)x)
 
 #ifdef __cplusplus
 extern "C" {

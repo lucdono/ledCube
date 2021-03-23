@@ -37,4 +37,6 @@
 void f_life_init(void );
 void f_life(uint16_t frame);
 
+uint16_t life_effect_callback(void);
+
 #endif /* LIFE_H_ */

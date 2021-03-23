@@ -26,6 +26,7 @@
  * Prototypes
  ******************************************************************************/
 void f_adc(uint16_t frame);
-void f_adc_init(void);
+
+uint16_t adc_effect_callback(void);
 
 #endif /* ADC_H_ */

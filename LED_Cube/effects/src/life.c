@@ -166,7 +166,7 @@ void f_life(uint16_t frame) {
 
 	if (population == 0) {
 		f_life_init();
-		ledQB_Callback();
+		life_effect_callback();
 	} else {
 		if (population > max_population)
 			max_population = population;
@@ -177,3 +177,9 @@ void f_life(uint16_t frame) {
 		generations++;
 	}
 }
+
+/*------------------------------------------------------------------------------
+ Weak symbols for effect callbacks
+ ------------------------------------------------------------------------------*/
+__attribute__ ((weak)) uint16_t life_effect_callback(void) { return 0; }
+
